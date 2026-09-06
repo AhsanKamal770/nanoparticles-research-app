@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZnO Nanoparticle ML Portal</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Chart.js for clean visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="container header-container">
+            <div>
+                <h1>🧪 Green-Synthesized ZnO Nanoparticle ML Portal</h1>
+                <p>Physicochemical Property Prediction & Machine Learning Research</p>
+            </div>
+            
+            <div class="target-selector-box">
+                <label for="targetSelect"><strong>Select Target / Research Question:</strong></label>
+                <select id="targetSelect" class="form-control">
+                    <option value="SEM_Size" selected>RQ1: SEM Particle Size (nm)</option>
+                    <option value="XRD_Size">RQ2: XRD Crystallite Size (nm)</option>
+                    <option value="UV_Bandgap">RQ3: UV-Vis Band Gap (eV)</option>
+                    <option value="Degradation">RQ4: Photocatalytic Degradation (%)</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="tab-overview">📊 Data Inspection</button>
+            <button class="tab-btn" data-tab="tab-training">⚙️ Model Training & Comparison</button>
+            <button class="tab-btn" data-tab="tab-visualizations">📈 Visualizations</button>
+            <button class="tab-btn" data-tab="tab-predict">🧪 Interactive Predictor</button>
+        </nav>
+
+        <!-- Tab 1: Data Inspection -->
+        <section id="tab-overview" class="tab-content active">
+            <h2>Data Inspection & Summary</h2>
+            <p>Dataset overview and summary statistics for green-synthesized ZnO nanoparticles.</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Experiments</h3>
+                    <span id="stat-shape">-</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Missing Values</h3>
+                    <span id="stat-nulls">0</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Duplicates</h3>
+                    <span id="stat-duplicates">0</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Target Variable</h3>
+                    <span id="stat-target-name">SEM Particle Size</span>
+                </div>
+            </div>
+
+            <h3>Dataset Preview (First 10 Rows)</h3>
+            <div class="table-responsive">
+                <table id="previewTable" class="data-table">
+                    <thead><!-- JS populated --></thead>
+                    <tbody><!-- JS populated --></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tab 2: Model Training & Comparison -->
+        <section id="tab-training" class="tab-content">
+            <div class="section-header">
+                <h2>Model Training & Performance Comparison</h2>
+                <button id="btnTrainModels" class="btn btn-primary">🔄 Train & Compare All 4 Models</button>
+            </div>
+            <p>Evaluates Linear Regression, Decision Tree, Random Forest, and XGBoost on unseen test data (20% split).</p>
+
+            <div id="trainingStatus" class="status-msg">Click 'Train & Compare All 4 Models' to run evaluation.</div>
+
+            <div class="table-responsive margin-top-20">
+                <table id="metricsTable" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>R² Score</th>
+                            <th>RMSE</th>
+                            <th>MAE</th>
+                            <th>MAPE (%)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6">No metrics available. Click train to generate results.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="bestModelCard" class="info-card hidden">
+                <h3>🏆 Recommended Model: <span id="bestModelName">-</span></h3>
+                <p id="bestModelDesc">Highest R² score and minimal prediction error on experimental test samples.</p>
+            </div>
+        </section>
+
+        <!-- Tab 3: Visualizations -->
+        <section id="tab-visualizations" class="tab-content">
+            <h2>Research Visualizations</h2>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Actual vs Predicted Values</h3>
+                    <canvas id="actualVsPredChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Feature Importances (Tree Models)</h3>
+                    <canvas id="featureImportanceChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 4: Interactive Predictor -->
+        <section id="tab-predict" class="tab-content">
+            <h2>Interactive Property Predictor</h2>
+            <p>Enter experimental synthesis conditions to compute predicted property and chemical mechanism insights.</p>
+
+            <div class="predictor-layout">
+                <form id="predictionForm" class="prediction-form">
+                    <div id="dynamicFormFields" class="form-grid">
+                        <!-- Populated by JS according to selected target -->
+                    </div>
+
+                    <div class="form-group margin-top-20">
+                        <label for="selectPredictModel"><strong>Model Algorithm:</strong></label>
+                        <select id="selectPredictModel" class="form-control">
+                            <option value="Random Forest" selected>Random Forest (Recommended)</option>
+                            <option value="XGBoost">XGBoost</option>
+                            <option value="Decision Tree">Decision Tree</option>
+                            <option value="Linear Regression">Linear Regression</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-success margin-top-20">🧪 Predict Target Value</button>
+                </form>
+
+                <div class="prediction-result-box">
+                    <h3>Prediction Result</h3>
+                    <div id="predictionBadge" class="result-badge">
+                        <span class="value" id="predVal">--</span>
+                        <span class="unit" id="predUnit">nm</span>
+                    </div>
+
+                    <div id="chemicalInsights" class="insights-box">
+                        <h4>🧪 Scientific & Chemical Interpretation</h4>
+                        <p id="insightSummary">Submit experimental parameters on the left to view predictions and physical chemistry analysis.</p>
+                        <ul id="insightMechanisms"></ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="app-footer">
+        <p>Green-Synthesized ZnO Nanoparticle Prediction Project &copy; 2026 | Antigravity ML Platform</p>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
