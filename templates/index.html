@@ -3,166 +3,457 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZnO Nanoparticle ML Portal</title>
+    <title>Al₂O₃ Nanoparticle Photocatalytic Degradation ML System</title>
+    <meta name="description" content="Machine learning modeling, kinetics prediction, and research figure generation for photocatalytic dye degradation over Al2O3 nanoparticles.">
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
-    <!-- Chart.js for clean visualizations -->
+    <!-- Chart.js for responsive interactive graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="dark-theme">
 
+    <!-- Top Navigation & Branding Header -->
     <header class="app-header">
         <div class="container header-container">
-            <div>
-                <h1>🧪 Green-Synthesized ZnO Nanoparticle ML Portal</h1>
-                <p>Physicochemical Property Prediction & Machine Learning Research</p>
+            <div class="brand-group">
+                <div class="brand-logo">
+                    <span class="logo-atom">⚛️</span>
+                </div>
+                <div>
+                    <div class="badge-tag">RESEARCH AI PLATFORM</div>
+                    <h1 class="brand-title">Al₂O₃ Photocatalytic Degradation Predictor</h1>
+                    <p class="brand-sub">Experimental Chemistry Data Modeling • Real vs Predicted Parity • Research Publication Graphics</p>
+                </div>
             </div>
             
-            <div class="target-selector-box">
-                <label for="targetSelect"><strong>Select Target / Research Question:</strong></label>
-                <select id="targetSelect" class="form-control">
-                    <option value="SEM_Size" selected>RQ1: SEM Particle Size (nm)</option>
-                    <option value="XRD_Size">RQ2: XRD Crystallite Size (nm)</option>
-                    <option value="UV_Bandgap">RQ3: UV-Vis Band Gap (eV)</option>
-                    <option value="Degradation">RQ4: Photocatalytic Degradation (%)</option>
-                </select>
+            <div class="header-actions">
+                <div class="system-chip">
+                    <span class="pulse-dot"></span>
+                    <span>System: <strong>Al₂O₃ Nanoparticles</strong></span>
+                </div>
+                
+                <!-- Theme Toggle Switch -->
+                <div class="theme-switch-wrapper" title="Switch Theme (Dark / Light)">
+                    <button type="button" id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle light and dark theme">
+                        <span class="theme-icon moon-icon">🌙</span>
+                        <span class="theme-icon sun-icon">☀️</span>
+                        <span class="theme-slider"></span>
+                    </button>
+                </div>
+
+                <a href="/api/export-results" class="btn btn-outline" id="btnExportCsv" title="Download full dataset with predictions">
+                    📥 Export CSV
+                </a>
             </div>
         </div>
     </header>
 
-    <div class="container">
+    <!-- Main Workspace Container -->
+    <main class="container main-content">
+        
         <!-- Navigation Tabs -->
-        <nav class="nav-tabs">
-            <button class="tab-btn active" data-tab="tab-overview">📊 Data Inspection</button>
-            <button class="tab-btn" data-tab="tab-training">⚙️ Model Training & Comparison</button>
-            <button class="tab-btn" data-tab="tab-visualizations">📈 Visualizations</button>
-            <button class="tab-btn" data-tab="tab-predict">🧪 Interactive Predictor</button>
+        <nav class="nav-tabs" role="tablist">
+            <button class="tab-btn active" data-tab="tab-predictor" id="tabNavPredictor">
+                <span class="tab-icon">🧪</span> Interactive Predictor
+            </button>
+            <button class="tab-btn" data-tab="tab-graphs" id="tabNavGraphs">
+                <span class="tab-icon">📈</span> Research Parity & Error Plots
+            </button>
+            <button class="tab-btn" data-tab="tab-figures" id="tabNavFigures">
+                <span class="tab-icon">🖼️</span> Publication Figures (300 DPI)
+            </button>
+            <button class="tab-btn" data-tab="tab-training" id="tabNavTraining">
+                <span class="tab-icon">⚙️</span> Models Benchmark & CV
+            </button>
+            <button class="tab-btn" data-tab="tab-data" id="tabNavData">
+                <span class="tab-icon">📊</span> Experimental Dataset (102 Runs)
+            </button>
         </nav>
 
-        <!-- Tab 1: Data Inspection -->
-        <section id="tab-overview" class="tab-content active">
-            <h2>Data Inspection & Summary</h2>
-            <p>Dataset overview and summary statistics for green-synthesized ZnO nanoparticles.</p>
-            
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Experiments</h3>
-                    <span id="stat-shape">-</span>
-                </div>
-                <div class="stat-card">
-                    <h3>Missing Values</h3>
-                    <span id="stat-nulls">0</span>
-                </div>
-                <div class="stat-card">
-                    <h3>Duplicates</h3>
-                    <span id="stat-duplicates">0</span>
-                </div>
-                <div class="stat-card">
-                    <h3>Target Variable</h3>
-                    <span id="stat-target-name">SEM Particle Size</span>
-                </div>
+        <!-- ====================================================================
+             TAB 1: INTERACTIVE PREDICTOR (Primary Focus)
+             ==================================================================== -->
+        <section id="tab-predictor" class="tab-content active">
+            <div class="section-intro">
+                <h2>Predict Photocatalytic Degradation Efficiency (%)</h2>
+                <p>Enter the 5 experimentally controlled parameters to compute predicted dye degradation and examine underlying radical kinetics mechanisms.</p>
             </div>
 
-            <h3>Dataset Preview (First 10 Rows)</h3>
-            <div class="table-responsive">
-                <table id="previewTable" class="data-table">
-                    <thead><!-- JS populated --></thead>
-                    <tbody><!-- JS populated --></tbody>
-                </table>
+            <div class="predictor-grid">
+                <!-- Parameters Form Card -->
+                <div class="card glass-card form-card">
+                    <div class="card-header">
+                        <h3>Input Experimental Conditions</h3>
+                        <span class="badge-pill">Al₂O₃ Parameters</span>
+                    </div>
+
+                    <form id="predictionForm" class="clean-form">
+                        <!-- Parameter 1: Solution pH -->
+                        <div class="param-row">
+                            <div class="param-label-group">
+                                <label for="inp_pH"><strong>1. Solution pH</strong></label>
+                                <span class="param-val-badge" id="val_pH">7.0</span>
+                            </div>
+                            <input type="range" id="inp_pH" name="pH" min="5.0" max="9.0" step="0.5" value="7.0" class="custom-range">
+                            <div class="range-marks">
+                                <span>pH 5.0 (Acidic)</span>
+                                <span class="active-mark">pH 7.0 (Optimum)</span>
+                                <span>pH 9.0 (Basic)</span>
+                            </div>
+                        </div>
+
+                        <!-- Parameter 2: Reaction Temperature -->
+                        <div class="param-row">
+                            <div class="param-label-group">
+                                <label for="inp_Temp"><strong>2. Reaction Temperature (°C)</strong></label>
+                                <span class="param-val-badge" id="val_Temp">30 °C</span>
+                            </div>
+                            <input type="range" id="inp_Temp" name="Temperature_C" min="20" max="60" step="5" value="30" class="custom-range">
+                            <div class="range-marks">
+                                <span>20 °C</span>
+                                <span>30 °C</span>
+                                <span>40 °C</span>
+                                <span>50 °C</span>
+                                <span>60 °C</span>
+                            </div>
+                        </div>
+
+                        <!-- Parameter 3: Irradiation / Reaction Time -->
+                        <div class="param-row">
+                            <div class="param-label-group">
+                                <label for="inp_Time"><strong>3. Reaction / Irradiation Time (min)</strong></label>
+                                <span class="param-val-badge" id="val_Time">60 min</span>
+                            </div>
+                            <input type="range" id="inp_Time" name="Time_min" min="20" max="120" step="10" value="60" class="custom-range">
+                            <div class="range-marks">
+                                <span>20 min</span>
+                                <span>40</span>
+                                <span>60 min</span>
+                                <span>80</span>
+                                <span>100</span>
+                                <span>120 min</span>
+                            </div>
+                        </div>
+
+                        <!-- Parameter 4: Al2O3 Catalyst Dosage -->
+                        <div class="param-row">
+                            <div class="param-label-group">
+                                <label for="inp_Al2O3"><strong>4. Al₂O₃ Nanoparticle Dosage (mg)</strong></label>
+                                <span class="param-val-badge" id="val_Al2O3">6.0 mg</span>
+                            </div>
+                            <input type="range" id="inp_Al2O3" name="Al2O3_mg" min="2" max="10" step="1" value="6" class="custom-range">
+                            <div class="range-marks">
+                                <span>2 mg</span>
+                                <span>4 mg</span>
+                                <span class="active-mark">6 mg (Optimum)</span>
+                                <span>8 mg</span>
+                                <span>10 mg</span>
+                            </div>
+                        </div>
+
+                        <!-- Parameter 5: Initial Dye Concentration -->
+                        <div class="param-row">
+                            <div class="param-label-group">
+                                <label for="inp_Dye"><strong>5. Initial Dye Concentration (M)</strong></label>
+                                <span class="param-val-badge" id="val_Dye">2.5 × 10⁻⁵ M</span>
+                            </div>
+                            <select id="inp_Dye" name="Dye_Conc_M" class="custom-select">
+                                <option value="0.000025" selected>2.5 × 10⁻⁵ M (0.025 mM - Standard Experimental)</option>
+                                <option value="0.000030">3.0 × 10⁻⁵ M (0.030 mM)</option>
+                                <option value="0.000035">3.5 × 10⁻⁵ M (0.035 mM)</option>
+                                <option value="0.000040">4.0 × 10⁻⁵ M (0.040 mM)</option>
+                                <option value="0.000045">4.5 × 10⁻⁵ M (0.045 mM)</option>
+                            </select>
+                        </div>
+
+                        <!-- Model Selection -->
+                        <div class="param-row model-select-row">
+                            <label for="selectModel"><strong>Select Machine Learning Architecture:</strong></label>
+                            <select id="selectModel" class="custom-select highlight-select">
+                                <option value="Support Vector Regressor (SVR)" selected>🏆 Support Vector Regressor (SVR) — R²: 0.9616 [Recommended]</option>
+                                <option value="Gradient Boosting">⚡ Gradient Boosting Regressor — R²: 0.8805</option>
+                                <option value="Polynomial Regression (Deg 2)">📐 Polynomial Regression (Deg 2) — R²: 0.8747</option>
+                                <option value="XGBoost">🚀 XGBoost Regressor — R²: 0.8416</option>
+                                <option value="Random Forest">🌲 Random Forest Regressor — R²: 0.7151</option>
+                                <option value="Artificial Neural Network (MLP)">🧠 Artificial Neural Network (MLP) — R²: 0.9047</option>
+                                <option value="Linear Regression">📏 Linear Regression (Baseline) — R²: 0.6948</option>
+                            </select>
+                        </div>
+
+                        <div class="preset-buttons">
+                            <span>Experimental Presets:</span>
+                            <button type="button" class="btn-preset" data-ph="7" data-temp="30" data-time="120" data-alo="6" data-dye="0.000025">Peak Max (92.5%)</button>
+                            <button type="button" class="btn-preset" data-ph="5" data-temp="30" data-time="60" data-alo="6" data-dye="0.000025">Acidic pH 5</button>
+                            <button type="button" class="btn-preset" data-ph="7" data-temp="30" data-time="60" data-alo="2" data-dye="0.000025">Low Catalyst (2mg)</button>
+                            <button type="button" class="btn-preset" data-ph="7" data-temp="30" data-time="60" data-alo="6" data-dye="0.000045">High Dye (4.5×10⁻⁵)</button>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block" id="btnRunPrediction">
+                            ⚡ Compute Degradation Prediction
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Prediction Results & Mechanism Output Card -->
+                <div class="card glass-card result-card">
+                    <div class="card-header">
+                        <h3>Predicted Photocatalytic Output</h3>
+                        <span id="badgeModelUsed" class="badge-pill model-badge">SVR Model</span>
+                    </div>
+
+                    <!-- Gauge Display -->
+                    <div class="gauge-container">
+                        <div class="gauge-ring">
+                            <div class="gauge-circle-outer">
+                                <div class="gauge-circle-inner">
+                                    <span class="gauge-val" id="predValText">76.95</span>
+                                    <span class="gauge-unit">% Degradation</span>
+                                </div>
+                            </div>
+                            <svg class="gauge-svg" viewBox="0 0 160 160">
+                                <circle class="gauge-track" cx="80" cy="80" r="70"></circle>
+                                <circle class="gauge-progress" id="gaugeProgressCircle" cx="80" cy="80" r="70"></circle>
+                            </svg>
+                        </div>
+
+                        <div class="efficiency-indicator">
+                            <div class="eff-bar">
+                                <div class="eff-fill" id="effProgressBar" style="width: 76.95%;"></div>
+                            </div>
+                            <div class="eff-labels">
+                                <span>0%</span>
+                                <span>Low (&lt;50%)</span>
+                                <span>Moderate (50-75%)</span>
+                                <span>High (&gt;75%)</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chemical Kinetics & Mechanisms -->
+                    <div class="mechanism-container">
+                        <div class="mechanism-header">
+                            <h4>🔬 Scientific Mechanism & Kinetics Analysis</h4>
+                        </div>
+                        <p id="featureDriverSummary" class="feat-summary">
+                            Dominant experimental drivers: <b>Irradiation Time</b>, <b>Catalyst Dosage</b>, <b>Solution pH</b>.
+                        </p>
+                        <ul id="mechanismList" class="mechanism-bullets">
+                            <li><b>Near-Neutral pH:</b> Minimizes electrostatic repulsion and enhances dye adsorption on Al₂O₃ active facets.</li>
+                            <li><b>Radical Mineralization:</b> Photo-excited electron-hole pairs generate reactive •OH and •O₂⁻ radicals.</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- Tab 2: Model Training & Comparison -->
+        <!-- ====================================================================
+             TAB 2: RESEARCH PARITY & ERROR PLOTS (Interactive)
+             ==================================================================== -->
+        <section id="tab-graphs" class="tab-content">
+            <div class="section-intro">
+                <h2>Real vs. Predicted Parity Diagrams & Error Diagnostics</h2>
+                <p>Interactive scientific plots validating experimental actual measurements against machine learning model predictions across train and test sets.</p>
+            </div>
+
+            <div class="charts-2col">
+                <!-- Parity Chart -->
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h3>(a) Actual vs. Predicted Parity Plot</h3>
+                        <div class="chart-controls">
+                            <label for="parityModelSelect">Model:</label>
+                            <select id="parityModelSelect" class="custom-select-sm">
+                                <option value="Support Vector Regressor (SVR)">SVR</option>
+                                <option value="Gradient Boosting">Gradient Boosting</option>
+                                <option value="XGBoost">XGBoost</option>
+                                <option value="Random Forest">Random Forest</option>
+                                <option value="Polynomial Regression (Deg 2)">Polynomial (Deg 2)</option>
+                                <option value="Linear Regression">Linear Regression</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartParity"></canvas>
+                    </div>
+                    <div class="chart-footer-note">
+                        <span class="dot-train"></span> Train Samples (N=81) &nbsp;|&nbsp; 
+                        <span class="dot-test"></span> Test Samples (N=21) &nbsp;|&nbsp; 
+                        <span class="line-parity"></span> 1:1 Parity Line (y = x)
+                    </div>
+                </div>
+
+                <!-- Residuals Chart -->
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h3>(b) Model Residuals Diagnostics</h3>
+                        <span class="badge-pill">Zero Mean Error</span>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartResiduals"></canvas>
+                    </div>
+                    <div class="chart-footer-note">
+                        Residual Error = Actual Degradation (%) − Predicted Degradation (%)
+                    </div>
+                </div>
+
+                <!-- Feature Importance Bar Chart -->
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h3>(c) Parametric Sensitivity Analysis</h3>
+                        <span class="badge-pill">Relative Importance</span>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartImportance"></canvas>
+                    </div>
+                </div>
+
+                <!-- Model Comparison Chart -->
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h3>(d) R² Accuracy & Error Benchmark</h3>
+                        <span class="badge-pill">All 8 Models</span>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartMetricsCompare"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================================
+             TAB 3: PUBLICATION FIGURES (300 DPI Ready for Papers)
+             ==================================================================== -->
+        <section id="tab-figures" class="tab-content">
+            <div class="section-intro">
+                <h2>Publication-Ready Research Figures (300 DPI)</h2>
+                <p>High-resolution vector/raster figures formatted according to Elsevier, ACS, and Springer environmental catalysis standards for journal articles, thesis, and presentations.</p>
+            </div>
+
+            <div class="figures-gallery" id="figuresGalleryGrid">
+                <!-- Dynamically injected figures with download buttons -->
+            </div>
+        </section>
+
+        <!-- ====================================================================
+             TAB 4: MODELS BENCHMARK & CROSS-VALIDATION
+             ==================================================================== -->
         <section id="tab-training" class="tab-content">
-            <div class="section-header">
-                <h2>Model Training & Performance Comparison</h2>
-                <button id="btnTrainModels" class="btn btn-primary">🔄 Train & Compare All 4 Models</button>
-            </div>
-            <p>Evaluates Linear Regression, Decision Tree, Random Forest, and XGBoost on unseen test data (20% split).</p>
-
-            <div id="trainingStatus" class="status-msg">Click 'Train & Compare All 4 Models' to run evaluation.</div>
-
-            <div class="table-responsive margin-top-20">
-                <table id="metricsTable" class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Model</th>
-                            <th>R² Score</th>
-                            <th>RMSE</th>
-                            <th>MAE</th>
-                            <th>MAPE (%)</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="6">No metrics available. Click train to generate results.</td></tr>
-                    </tbody>
-                </table>
+            <div class="section-intro flex-between">
+                <div>
+                    <h2>Machine Learning Regression Benchmark & 5-Fold Cross-Validation</h2>
+                    <p>Comparison of 9 algorithms evaluated on 80% train / 20% unseen experimental test split with shuffled 5-fold cross-validation.</p>
+                </div>
+                <button class="btn btn-primary" id="btnRetrainAll">
+                    🔄 Retrain & Re-evaluate Pipeline
+                </button>
             </div>
 
-            <div id="bestModelCard" class="info-card hidden">
-                <h3>🏆 Recommended Model: <span id="bestModelName">-</span></h3>
-                <p id="bestModelDesc">Highest R² score and minimal prediction error on experimental test samples.</p>
+            <div id="retrainStatus" class="status-alert hidden"></div>
+
+            <div class="card glass-card margin-top-20">
+                <div class="table-responsive">
+                    <table class="data-table" id="metricsTable">
+                        <thead>
+                            <tr>
+                                <th>ML Model Algorithm</th>
+                                <th>Train R²</th>
+                                <th>Test R²</th>
+                                <th>Adjusted R²</th>
+                                <th>Test RMSE (%)</th>
+                                <th>Test MAE (%)</th>
+                                <th>Test MAPE (%)</th>
+                                <th>Pearson r</th>
+                                <th>5-Fold CV R² (Mean ± Std)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card glass-card margin-top-20 highlight-box">
+                <h3>🏆 Key Scientific Findings:</h3>
+                <ul class="findings-list">
+                    <li><strong>Support Vector Regressor (SVR)</strong> achieved superior generalizability with <strong>Test R² = 0.9616</strong>, <strong>5-Fold CV R² = 0.9768</strong>, and lowest root mean square error (<strong>RMSE = 2.75%</strong>).</li>
+                    <li><strong>Gradient Boosting</strong> and <strong>Polynomial Regression (Deg 2)</strong> also demonstrated robust non-linear tracking of photocatalytic kinetics (R² &gt; 0.87).</li>
+                    <li>The non-linear response surfaces confirm the existence of optimal operational coordinates: <strong>pH 7.0</strong>, <strong>Catalyst Dosage 6.0 mg</strong>, and <strong>Temperature 30–40 °C</strong>.</li>
+                </ul>
             </div>
         </section>
 
-        <!-- Tab 3: Visualizations -->
-        <section id="tab-visualizations" class="tab-content">
-            <h2>Research Visualizations</h2>
-            <div class="charts-grid">
-                <div class="chart-card">
-                    <h3>Actual vs Predicted Values</h3>
-                    <canvas id="actualVsPredChart"></canvas>
+        <!-- ====================================================================
+             TAB 5: EXPERIMENTAL DATASET (102 RUNS)
+             ==================================================================== -->
+        <section id="tab-data" class="tab-content">
+            <div class="section-intro flex-between">
+                <div>
+                    <h2>Real Experimental Dataset: Al₂O₃ Photocatalytic Degradation</h2>
+                    <p>102 real laboratory experimental runs measuring target dye degradation under factorial parameter sweeps.</p>
                 </div>
-                <div class="chart-card">
-                    <h3>Feature Importances (Tree Models)</h3>
-                    <canvas id="featureImportanceChart"></canvas>
+                <a href="/api/export-results" class="btn btn-success">
+                    📥 Download CSV with Predictions
+                </a>
+            </div>
+
+            <div class="stats-cards-grid">
+                <div class="stat-card">
+                    <div class="stat-num" id="statRunsCount">102</div>
+                    <div class="stat-label">Total Experimental Runs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="statInputParams">5</div>
+                    <div class="stat-label">Controlled Input Features</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num">92.51%</div>
+                    <div class="stat-label">Maximum Degradation Achieved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num">30.69%</div>
+                    <div class="stat-label">Minimum Degradation Recorded</div>
+                </div>
+            </div>
+
+            <div class="card glass-card margin-top-20">
+                <div class="card-header">
+                    <h3>Experimental Data Records (Preview)</h3>
+                    <span class="badge-pill">AlO particles.xlsx</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table" id="datasetPreviewTable">
+                        <thead><!-- JS populated --></thead>
+                        <tbody><!-- JS populated --></tbody>
+                    </table>
                 </div>
             </div>
         </section>
 
-        <!-- Tab 4: Interactive Predictor -->
-        <section id="tab-predict" class="tab-content">
-            <h2>Interactive Property Predictor</h2>
-            <p>Enter experimental synthesis conditions to compute predicted property and chemical mechanism insights.</p>
+    </main>
 
-            <div class="predictor-layout">
-                <form id="predictionForm" class="prediction-form">
-                    <div id="dynamicFormFields" class="form-grid">
-                        <!-- Populated by JS according to selected target -->
-                    </div>
-
-                    <div class="form-group margin-top-20">
-                        <label for="selectPredictModel"><strong>Model Algorithm:</strong></label>
-                        <select id="selectPredictModel" class="form-control">
-                            <option value="Random Forest" selected>Random Forest (Recommended)</option>
-                            <option value="XGBoost">XGBoost</option>
-                            <option value="Decision Tree">Decision Tree</option>
-                            <option value="Linear Regression">Linear Regression</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn btn-success margin-top-20">🧪 Predict Target Value</button>
-                </form>
-
-                <div class="prediction-result-box">
-                    <h3>Prediction Result</h3>
-                    <div id="predictionBadge" class="result-badge">
-                        <span class="value" id="predVal">--</span>
-                        <span class="unit" id="predUnit">nm</span>
-                    </div>
-
-                    <div id="chemicalInsights" class="insights-box">
-                        <h4>🧪 Scientific & Chemical Interpretation</h4>
-                        <p id="insightSummary">Submit experimental parameters on the left to view predictions and physical chemistry analysis.</p>
-                        <ul id="insightMechanisms"></ul>
-                    </div>
-                </div>
+    <!-- Modal for High-Res Figure Zoom -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" id="modalCloseBtn">&times;</span>
+            <h3 id="modalFigTitle">Figure Preview</h3>
+            <img id="modalImg" src="" alt="High resolution research figure">
+            <div class="modal-actions">
+                <a id="modalDownloadBtn" href="" class="btn btn-primary" download>💾 Download 300 DPI Figure</a>
             </div>
-        </section>
+        </div>
     </div>
 
+    <!-- Application Footer -->
     <footer class="app-footer">
-        <p>Green-Synthesized ZnO Nanoparticle Prediction Project &copy; 2026 | Antigravity ML Platform</p>
+        <div class="container footer-content">
+            <p>Al₂O₃ Nanoparticle Photocatalytic Degradation Machine Learning Portal &copy; 2026 | Research Modeling & Kinetic Diagnostics</p>
+        </div>
     </footer>
 
     <script src="/static/js/main.js"></script>
