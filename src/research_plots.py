@@ -1,4 +1,5 @@
 import os
+import re
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -23,41 +24,58 @@ plt.rcParams.update({
     'grid.linestyle': '--'
 })
 
-def generate_all_research_plots(df, models_obj, X_train, y_train, X_test, y_test, metrics_df, best_model_name="Support Vector Regressor (SVR)", output_dir="results/figures", web_dir="static/generated_plots"):
+def get_model_slug(model_name):
+    """Generates clean filesystem slug from model name."""
+    s = model_name.lower()
+    s = re.sub(r'[\(\)\/\s]+', '_', s).strip('_')
+    return s
+
+def generate_plots_for_model(df, models_obj, X_train, y_train, X_test, y_test, metrics_df, model_name="Support Vector Regressor (SVR)", output_dir="results/figures", web_dir="static/generated_plots"):
     """
-    Generates high-resolution (300 DPI) publication-quality research figures.
+    Generates high-resolution (300 DPI) publication-quality research figures specifically for a chosen model.
     Saves to both results/figures/ (for research paper submission) and static/generated_plots/ (for web UI).
     """
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(web_dir, exist_ok=True)
     
+    slug = get_model_slug(model_name)
     generated_files = {}
 
     # 1. PARITY PLOT (Real vs Predicted)
-    fig_parity = plot_parity_diagram(models_obj, X_train, y_train, X_test, y_test, metrics_df, best_model_name)
-    save_fig(fig_parity, "fig1_actual_vs_predicted_parity", output_dir, web_dir, generated_files)
+    fig_parity = plot_parity_diagram(models_obj, X_train, y_train, X_test, y_test, metrics_df, model_name)
+    save_fig(fig_parity, f"fig1_actual_vs_predicted_parity_{slug}", output_dir, web_dir, generated_files)
 
     # 2. RESIDUALS DIAGNOSTIC PLOT
-    fig_residuals = plot_residual_diagnostics(models_obj, X_test, y_test, best_model_name)
-    save_fig(fig_residuals, "fig2_residual_analysis", output_dir, web_dir, generated_files)
+    fig_residuals = plot_residual_diagnostics(models_obj, X_test, y_test, model_name)
+    save_fig(fig_residuals, f"fig2_residual_analysis_{slug}", output_dir, web_dir, generated_files)
 
-    # 3. COMPARATIVE MODEL PERFORMANCE
+    # 3. COMPARATIVE MODEL PERFORMANCE (Universal)
     fig_models = plot_model_comparison(metrics_df)
     save_fig(fig_models, "fig3_model_metrics_comparison", output_dir, web_dir, generated_files)
 
     # 4. FEATURE IMPORTANCE & PARAMETRIC SENSITIVITY
-    fig_feat = plot_feature_importance(models_obj, X_train, y_train)
-    save_fig(fig_feat, "fig4_feature_importance_sensitivity", output_dir, web_dir, generated_files)
+    fig_feat = plot_feature_importance(models_obj, X_train, y_train, model_name)
+    save_fig(fig_feat, f"fig4_feature_importance_sensitivity_{slug}", output_dir, web_dir, generated_files)
 
     # 5. EXPERIMENTAL KINETICS & PARAMETER VARIATION
-    fig_kinetics = plot_experimental_kinetics(df, models_obj, best_model_name)
-    save_fig(fig_kinetics, "fig5_experimental_kinetics_sweeps", output_dir, web_dir, generated_files)
+    fig_kinetics = plot_experimental_kinetics(df, models_obj, model_name)
+    save_fig(fig_kinetics, f"fig5_experimental_kinetics_sweeps_{slug}", output_dir, web_dir, generated_files)
 
     # 6. 3D RESPONSE SURFACES & 2D CONTOURS (RSM)
-    fig_surface = plot_response_surfaces(models_obj, best_model_name)
-    save_fig(fig_surface, "fig6_response_surface_3d", output_dir, web_dir, generated_files)
+    fig_surface = plot_response_surfaces(models_obj, model_name)
+    save_fig(fig_surface, f"fig6_response_surface_3d_{slug}", output_dir, web_dir, generated_files)
 
     return generated_files
+
+def generate_all_research_plots(df, models_obj, X_train, y_train, X_test, y_test, metrics_df, best_model_name="Support Vector Regressor (SVR)", output_dir="results/figures", web_dir="static/generated_plots"):
+    """
+    Generates plots for all available models so they are instantly accessible.
+    """
+    all_generated = {}
+    for m_name in models_obj.models.keys():
+        plots = generate_plots_for_model(df, models_obj, X_train, y_train, X_test, y_test, metrics_df, m_name, output_dir, web_dir)
+        all_generated[m_name] = plots
+    return all_generated
 
 def save_fig(fig, base_name, output_dir, web_dir, file_dict):
     """Saves figure in 300 DPI PNG and SVG formats."""
@@ -85,14 +103,15 @@ def plot_parity_diagram(models_obj, X_train, y_train, X_test, y_test, metrics_df
     if not model:
         model = list(models_obj.models.values())[0]
 
-    y_train_pred = model.predict(X_train)
-    y_test_pred = model.predict(X_test)
+    y_train_pred = np.clip(model.predict(X_train), 0, 100)
+    y_test_pred = np.clip(model.predict(X_test), 0, 100)
     
     # Calculate fit line on test
     slope, intercept = np.polyfit(y_test, y_test_pred, 1)
 
     # Metrics
-    m_row = metrics_df[metrics_df["Model"] == model_name].iloc[0] if len(metrics_df[metrics_df["Model"] == model_name]) > 0 else metrics_df.iloc[0]
+    m_rows = metrics_df[metrics_df["Model"] == model_name]
+    m_row = m_rows.iloc[0] if len(m_rows) > 0 else metrics_df.iloc[0]
     
     fig, ax = plt.subplots(figsize=(7.5, 7.0))
     
@@ -146,7 +165,7 @@ def plot_residual_diagnostics(models_obj, X_test, y_test, model_name):
     Residuals vs Predicted Plot & Residual Distribution Histogram with Gaussian Fit.
     """
     model = models_obj.models.get(model_name) or list(models_obj.models.values())[0]
-    y_pred = model.predict(X_test)
+    y_pred = np.clip(model.predict(X_test), 0, 100)
     residuals = y_test.values - y_pred
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.2))
@@ -155,8 +174,9 @@ def plot_residual_diagnostics(models_obj, X_test, y_test, model_name):
     ax1.scatter(y_pred, residuals, color='#00897b', edgecolors='k', s=70, alpha=0.85)
     ax1.axhline(0, color='black', linestyle='--', lw=1.8)
     std_res = np.std(residuals)
-    ax1.axhline(2*std_res, color='red', linestyle=':', lw=1.2, label=f'+2σ ({2*std_res:.2f})')
-    ax1.axhline(-2*std_res, color='red', linestyle=':', lw=1.2, label=f'-2σ ({-2*std_res:.2f})')
+    if std_res > 0:
+        ax1.axhline(2*std_res, color='red', linestyle=':', lw=1.2, label=f'+2σ ({2*std_res:.2f})')
+        ax1.axhline(-2*std_res, color='red', linestyle=':', lw=1.2, label=f'-2σ ({-2*std_res:.2f})')
     ax1.set_xlabel('Predicted Degradation (%)', fontweight='bold')
     ax1.set_ylabel('Residual (Actual - Predicted) (%)', fontweight='bold')
     ax1.set_title('(a) Residuals vs. Model Predicted Values')
@@ -169,7 +189,7 @@ def plot_residual_diagnostics(models_obj, X_test, y_test, model_name):
     mu, std = norm.fit(residuals)
     xmin, xmax = ax2.get_xlim()
     x = np.linspace(xmin, xmax, 100)
-    p = norm.pdf(x, mu, std)
+    p = norm.pdf(x, mu, max(std, 1e-4))
     ax2.plot(x, p, 'r-', lw=2.2, label=f'Normal Fit (μ={mu:.2f}, σ={std:.2f})')
     ax2.set_xlabel('Residual Error (%)', fontweight='bold')
     ax2.set_ylabel('Probability Density', fontweight='bold')
@@ -219,14 +239,17 @@ def plot_model_comparison(metrics_df):
     fig.suptitle("Machine Learning Models Evaluation & Benchmark on Al₂O₃ Degradation Dataset", fontsize=14, fontweight='bold')
     return fig
 
-def plot_feature_importance(models_obj, X_train, y_train):
+def plot_feature_importance(models_obj, X_train, y_train, model_name=None):
     """
-    Parametric sensitivity analysis and feature importance bar plot.
+    Parametric sensitivity analysis and feature importance bar plot specifically for model_name.
     """
     importances = models_obj.get_feature_importances(X_train, y_train)
     
-    # Priority: Gradient Boosting or Random Forest or Consensus
-    feat_data = importances.get("Gradient Boosting") or importances.get("Random Forest") or importances.get("Global_Consensus")
+    feat_data = None
+    if model_name and model_name in importances:
+        feat_data = importances[model_name]
+    if not feat_data:
+        feat_data = importances.get("Gradient Boosting") or importances.get("Random Forest") or importances.get("Global_Consensus")
     
     name_map = {
         "pH": "Solution pH",
@@ -253,21 +276,22 @@ def plot_feature_importance(models_obj, X_train, y_train):
         w = bar.get_width()
         ax.text(w + 1.0, bar.get_y() + bar.get_height()/2, f"{w:.1f}%", va='center', fontweight='bold', fontsize=10)
 
+    title_model = f" ({model_name})" if model_name else ""
     ax.set_xlabel("Relative Importance / Influence (%)", fontweight='bold')
-    ax.set_title("Feature Sensitivity Analysis for Photocatalytic Degradation\n(Ensemble Tree / Permutation Assessment)", pad=12)
-    ax.set_xlim(0, max(sorted_vals) * 1.2)
+    ax.set_title(f"Feature Sensitivity Analysis{title_model}\n(Photocatalytic Degradation Factor Contribution)", pad=12)
+    ax.set_xlim(0, max(sorted_vals) * 1.25)
     ax.grid(True, axis='x')
     return fig
 
-def plot_experimental_kinetics(df, models_obj, best_model_name):
+def plot_experimental_kinetics(df, models_obj, model_name):
     """
-    4-panel experimental degradation kinetics curves with real data points vs model fit:
+    4-panel experimental degradation kinetics curves with real data points vs specific model fit:
     (a) pH effect over time
     (b) Catalyst dosage effect over time
     (c) Dye concentration effect over time
     (d) Temperature effect over time
     """
-    model = models_obj.models.get(best_model_name) or list(models_obj.models.values())[0]
+    model = models_obj.models.get(model_name) or list(models_obj.models.values())[0]
     
     fig, axes = plt.subplots(2, 2, figsize=(14, 11))
     time_continuous = np.linspace(20, 120, 50)
@@ -280,7 +304,6 @@ def plot_experimental_kinetics(df, models_obj, best_model_name):
         sub_df = df[(df['pH'] == ph_val) & (df['Temperature_C'] == 30) & (df['Al2O3_mg'] == 6) & (np.isclose(df['Dye_Conc_M'], 2.5e-5))]
         if len(sub_df) > 0:
             ax_a.scatter(sub_df['Time_min'], sub_df['Degradation_Percent'], color=col, s=60, edgecolors='k', label=f'pH {ph_val} (Exp)', zorder=5)
-            # Model prediction line
             pred_inputs = pd.DataFrame({
                 'pH': [ph_val]*50,
                 'Temperature_C': [30]*50,
@@ -288,11 +311,12 @@ def plot_experimental_kinetics(df, models_obj, best_model_name):
                 'Al2O3_mg': [6]*50,
                 'Dye_Conc_M': [2.5e-5]*50
             })
-            ax_a.plot(time_continuous, model.predict(pred_inputs), color=col, lw=1.8, linestyle='-', alpha=0.85)
+            preds = np.clip(model.predict(pred_inputs), 0, 100)
+            ax_a.plot(time_continuous, preds, color=col, lw=1.8, linestyle='-', alpha=0.85)
     ax_a.set_title('(a) Effect of Solution pH vs Time (T=30°C, Al₂O₃=6mg, C₀=2.5×10⁻⁵M)', fontsize=11, fontweight='bold')
     ax_a.set_xlabel('Irradiation Time (min)', fontweight='bold')
     ax_a.set_ylabel('Dye Degradation (%)', fontweight='bold')
-    ax_a.set_ylim(25, 100)
+    ax_a.set_ylim(20, 100)
     ax_a.grid(True)
     ax_a.legend(loc='lower right', fontsize=8.5)
 
@@ -311,11 +335,12 @@ def plot_experimental_kinetics(df, models_obj, best_model_name):
                 'Al2O3_mg': [cat_val]*50,
                 'Dye_Conc_M': [2.5e-5]*50
             })
-            ax_b.plot(time_continuous, model.predict(pred_inputs), color=col, lw=1.8, linestyle='-', alpha=0.85)
+            preds = np.clip(model.predict(pred_inputs), 0, 100)
+            ax_b.plot(time_continuous, preds, color=col, lw=1.8, linestyle='-', alpha=0.85)
     ax_b.set_title('(b) Effect of Al₂O₃ Catalyst Dosage vs Time (pH=7, T=30°C)', fontsize=11, fontweight='bold')
     ax_b.set_xlabel('Irradiation Time (min)', fontweight='bold')
     ax_b.set_ylabel('Dye Degradation (%)', fontweight='bold')
-    ax_b.set_ylim(25, 100)
+    ax_b.set_ylim(20, 100)
     ax_b.grid(True)
     ax_b.legend(loc='lower right', fontsize=8.5)
 
@@ -335,11 +360,12 @@ def plot_experimental_kinetics(df, models_obj, best_model_name):
                 'Al2O3_mg': [6]*50,
                 'Dye_Conc_M': [dye_val]*50
             })
-            ax_c.plot(time_continuous, model.predict(pred_inputs), color=col, lw=1.8, linestyle='-', alpha=0.85)
+            preds = np.clip(model.predict(pred_inputs), 0, 100)
+            ax_c.plot(time_continuous, preds, color=col, lw=1.8, linestyle='-', alpha=0.85)
     ax_c.set_title('(c) Effect of Initial Dye Concentration vs Time (pH=7, Al₂O₃=6mg)', fontsize=11, fontweight='bold')
     ax_c.set_xlabel('Irradiation Time (min)', fontweight='bold')
     ax_c.set_ylabel('Dye Degradation (%)', fontweight='bold')
-    ax_c.set_ylim(25, 100)
+    ax_c.set_ylim(20, 100)
     ax_c.grid(True)
     ax_c.legend(loc='lower right', fontsize=8.5)
 
@@ -358,23 +384,24 @@ def plot_experimental_kinetics(df, models_obj, best_model_name):
                 'Al2O3_mg': [6]*50,
                 'Dye_Conc_M': [2.5e-5]*50
             })
-            ax_d.plot(time_continuous, model.predict(pred_inputs), color=col, lw=1.8, linestyle='-', alpha=0.85)
+            preds = np.clip(model.predict(pred_inputs), 0, 100)
+            ax_d.plot(time_continuous, preds, color=col, lw=1.8, linestyle='-', alpha=0.85)
     ax_d.set_title('(d) Effect of Reaction Temperature vs Time (pH=7, Al₂O₃=6mg)', fontsize=11, fontweight='bold')
     ax_d.set_xlabel('Irradiation Time (min)', fontweight='bold')
     ax_d.set_ylabel('Dye Degradation (%)', fontweight='bold')
-    ax_d.set_ylim(25, 100)
+    ax_d.set_ylim(20, 100)
     ax_d.grid(True)
     ax_d.legend(loc='lower right', fontsize=8.5)
 
-    fig.suptitle('Experimental Kinetics & Model Simulation of Photocatalytic Degradation over Al₂O₃ Nanoparticles', fontsize=14, fontweight='bold')
+    fig.suptitle(f'Experimental Kinetics & Model Simulation ({model_name})\nPhotocatalytic Degradation over Al₂O₃ Nanoparticles', fontsize=14, fontweight='bold')
     return fig
 
-def plot_response_surfaces(models_obj, best_model_name):
+def plot_response_surfaces(models_obj, model_name):
     """
-    3D Surface and 2D Contour Response Surface Methodology (RSM) interaction plots.
+    3D Surface and 2D Contour Response Surface Methodology (RSM) interaction plots for specific model.
     """
     from mpl_toolkits.mplot3d import Axes3D
-    model = models_obj.models.get(best_model_name) or list(models_obj.models.values())[0]
+    model = models_obj.models.get(model_name) or list(models_obj.models.values())[0]
 
     fig = plt.figure(figsize=(15, 6.5))
     
@@ -400,7 +427,7 @@ def plot_response_surfaces(models_obj, best_model_name):
     ax1.set_xlabel('Solution pH', fontweight='bold', labelpad=8)
     ax1.set_ylabel('Time (min)', fontweight='bold', labelpad=8)
     ax1.set_zlabel('Degradation (%)', fontweight='bold', labelpad=8)
-    ax1.set_title('(a) 3D Response Surface: Degradation vs pH & Time', pad=12, fontweight='bold')
+    ax1.set_title(f'(a) 3D Response Surface: {model_name}', pad=12, fontweight='bold')
     fig.colorbar(surf, ax=ax1, shrink=0.55, aspect=10, label='Degradation (%)')
 
     # Subplot 2: 2D Contour
@@ -413,5 +440,5 @@ def plot_response_surfaces(models_obj, best_model_name):
     ax2.set_title('(b) 2D Iso-Response Contours (T=30°C, Al₂O₃=6mg)', pad=12, fontweight='bold')
     fig.colorbar(contour, ax=ax2, label='Predicted Degradation (%)')
 
-    fig.suptitle('Response Surface Analysis (RSM) for Al₂O₃ Photocatalytic Degradation Process', fontsize=14, fontweight='bold')
+    fig.suptitle(f'Response Surface Analysis (RSM) — {model_name}', fontsize=14, fontweight='bold')
     return fig

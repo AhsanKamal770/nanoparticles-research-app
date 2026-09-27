@@ -803,6 +803,104 @@ body.light-theme .sun-icon {
     background-color: var(--text-primary);
 }
 
+.margin-bottom-24 {
+    margin-bottom: 24px;
+}
+
+/* Figure Model Selector Card */
+.figure-model-selector-card {
+    padding: 18px 24px;
+    border-color: var(--border-highlight);
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-card-hover));
+}
+
+.figure-selector-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.figure-selector-label {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.selector-icon {
+    font-size: 26px;
+    background: var(--input-badge-bg);
+    border: 1px solid var(--border-color);
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.figure-selector-label strong {
+    font-size: 15px;
+    color: var(--text-primary);
+    display: block;
+}
+
+.selector-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.figure-selector-controls {
+    min-width: 320px;
+}
+
+.figure-model-dropdown {
+    font-weight: 600;
+}
+
+.quick-model-pills {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.pills-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.btn-fig-model-pill {
+    background: var(--input-badge-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-fig-model-pill:hover {
+    color: var(--text-primary);
+    border-color: var(--border-highlight);
+}
+
+.btn-fig-model-pill.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 2px 8px var(--primary-glow);
+}
+
 /* Figures Gallery (300 DPI) */
 .figures-gallery {
     display: grid;

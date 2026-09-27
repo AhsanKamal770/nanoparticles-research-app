@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let globalVisualData = null;
     let globalMetrics = [];
     let currentParityModel = "Support Vector Regressor (SVR)";
+    let selectedFigureModel = "Support Vector Regressor (SVR)";
     let currentTheme = "dark";
 
     // DOM Elements
@@ -30,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const val_Dye = document.getElementById("val_Dye");
     const selectModel = document.getElementById("selectModel");
     const parityModelSelect = document.getElementById("parityModelSelect");
+    const figureModelSelect = document.getElementById("figureModelSelect");
     const predictionForm = document.getElementById("predictionForm");
     const btnRetrainAll = document.getElementById("btnRetrainAll");
     const retrainStatus = document.getElementById("retrainStatus");
@@ -39,9 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
     initTabs();
     initRangeListeners();
     initPresets();
+    initFigureModelSelector();
     loadDatasetOverview();
     loadVisualizations();
-    loadResearchFigures();
+    loadResearchFigures(selectedFigureModel);
 
     // ====================================================================
     // 0. Theme Switcher (Black / White / Dark / Light)
@@ -69,7 +72,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         localStorage.setItem("nano_theme", theme);
 
-        // Update active charts with theme styling
         if (globalVisualData) {
             renderAllCharts();
         }
@@ -103,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (targetTab === "tab-graphs" && globalVisualData) {
                     renderAllCharts();
                 } else if (targetTab === "tab-figures") {
-                    loadResearchFigures();
+                    loadResearchFigures(selectedFigureModel);
                 }
             });
         });
@@ -185,6 +187,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ====================================================================
+    // 3b. Publication Figures Model Selector
+    // ====================================================================
+    function initFigureModelSelector() {
+        if (figureModelSelect) {
+            figureModelSelect.addEventListener("change", (e) => {
+                selectedFigureModel = e.target.value;
+                syncFigureModelPills(selectedFigureModel);
+                loadResearchFigures(selectedFigureModel);
+            });
+        }
+
+        document.querySelectorAll(".btn-fig-model-pill").forEach(pill => {
+            pill.addEventListener("click", () => {
+                const m = pill.getAttribute("data-model");
+                if (m) {
+                    selectedFigureModel = m;
+                    if (figureModelSelect) figureModelSelect.value = m;
+                    syncFigureModelPills(m);
+                    loadResearchFigures(m);
+                }
+            });
+        });
+    }
+
+    function syncFigureModelPills(activeModel) {
+        document.querySelectorAll(".btn-fig-model-pill").forEach(p => {
+            if (p.getAttribute("data-model") === activeModel) {
+                p.classList.add("active");
+            } else {
+                p.classList.remove("active");
+            }
+        });
+    }
+
+    // ====================================================================
     // 4. Run Single Prediction
     // ====================================================================
     predictionForm.addEventListener("submit", (e) => {
@@ -230,7 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const progressCircle = document.getElementById("gaugeProgressCircle");
                 progressCircle.style.strokeDashoffset = offset;
 
-                // Color code gauge based on degradation efficiency
+                // Color code gauge
                 if (predVal >= 75) {
                     progressCircle.style.stroke = "#10b981"; // Emerald
                 } else if (predVal >= 50) {
@@ -271,7 +308,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("statRunsCount").innerText = summary.shape[0];
                 document.getElementById("statInputParams").innerText = summary.columns.length - 1;
 
-                // Render table head & body
                 renderPreviewTable(summary.head);
             }
         } catch (err) {
@@ -624,21 +660,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ====================================================================
-    // 8. Load Publication Figures (300 DPI)
+    // 8. Load Publication Figures (300 DPI) per Selected Model
     // ====================================================================
-    async function loadResearchFigures() {
+    async function loadResearchFigures(modelName = "Support Vector Regressor (SVR)") {
         const gallery = document.getElementById("figuresGalleryGrid");
         if (!gallery) return;
 
+        // Show loading state
+        gallery.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-secondary);">
+                <div style="font-size: 28px; margin-bottom: 10px;">⏳</div>
+                <p>Generating & loading publication-grade figures for <strong>${modelName}</strong>...</p>
+            </div>
+        `;
+
         try {
-            const res = await fetch("/api/research-figures");
+            const res = await fetch(`/api/research-figures?model=${encodeURIComponent(modelName)}`);
             const data = await res.json();
 
             if (data.status === "success") {
                 const cardsHtml = data.figures.map(fig => `
                     <div class="figure-card">
-                        <div class="figure-img-box" onclick="openImageModal('${fig.url}', '${fig.title}', '${fig.id}')">
-                            <img src="${fig.url}" alt="${fig.title}" loading="lazy">
+                        <div class="figure-img-box" onclick="openImageModal('${fig.url}?v=${Date.now()}', '${fig.title}', '${fig.id}')">
+                            <img src="${fig.url}?v=${Date.now()}" alt="${fig.title}" loading="lazy">
                             <span class="figure-zoom-tag">🔍 Click to Enlarge</span>
                         </div>
                         <div class="figure-info">
@@ -657,9 +701,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 `).join("");
 
                 gallery.innerHTML = cardsHtml;
+            } else {
+                gallery.innerHTML = `<p style="color: var(--danger); padding: 20px;">Failed to load figures: ${data.message}</p>`;
             }
         } catch (err) {
             console.error("Failed to load publication figures:", err);
+            gallery.innerHTML = `<p style="color: var(--danger); padding: 20px;">Error connecting to server for figures.</p>`;
         }
     }
 
@@ -685,7 +732,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     retrainStatus.innerText = `✅ Success! All models retrained. Best model: ${data.best_model} (Test R² = ${data.metrics[0].Test_R2.toFixed(4)}). Research figures updated.`;
                     renderMetricsTable(data.metrics, data.best_model);
                     loadVisualizations();
-                    loadResearchFigures();
+                    loadResearchFigures(selectedFigureModel);
                 } else {
                     retrainStatus.className = "status-alert error";
                     retrainStatus.innerText = `❌ Error: ${data.message}`;

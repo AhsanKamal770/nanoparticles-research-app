@@ -328,9 +328,49 @@
              TAB 3: PUBLICATION FIGURES (300 DPI Ready for Papers)
              ==================================================================== -->
         <section id="tab-figures" class="tab-content">
-            <div class="section-intro">
-                <h2>Publication-Ready Research Figures (300 DPI)</h2>
-                <p>High-resolution vector/raster figures formatted according to Elsevier, ACS, and Springer environmental catalysis standards for journal articles, thesis, and presentations.</p>
+            <div class="section-intro flex-between">
+                <div>
+                    <h2>Publication-Ready Research Figures (300 DPI)</h2>
+                    <p>High-resolution vector/raster figures formatted according to Elsevier, ACS, and Springer environmental catalysis standards for journal articles, thesis, and presentations.</p>
+                </div>
+            </div>
+
+            <!-- Model Selection Bar for Figures -->
+            <div class="card glass-card figure-model-selector-card margin-bottom-24">
+                <div class="figure-selector-content">
+                    <div class="figure-selector-label">
+                        <span class="selector-icon">🔬</span>
+                        <div>
+                            <strong>Select ML Algorithm for Publication Figures:</strong>
+                            <p class="selector-hint">Generates Parity Plots, Residual Diagnostics, Kinetics Sweeps, & 3D Response Surfaces specific to the chosen model.</p>
+                        </div>
+                    </div>
+                    <div class="figure-selector-controls">
+                        <select id="figureModelSelect" class="custom-select highlight-select figure-model-dropdown">
+                            <option value="Support Vector Regressor (SVR)" selected>🏆 Support Vector Regressor (SVR) — R²: 0.9616 [Best]</option>
+                            <option value="Artificial Neural Network (MLP)">🧠 Artificial Neural Network (MLP) — R²: 0.9047</option>
+                            <option value="Gradient Boosting">⚡ Gradient Boosting Regressor — R²: 0.8805</option>
+                            <option value="Polynomial Regression (Deg 2)">📐 Polynomial Regression (Deg 2) — R²: 0.8747</option>
+                            <option value="XGBoost">🚀 XGBoost Regressor — R²: 0.8416</option>
+                            <option value="Random Forest">🌲 Random Forest Regressor — R²: 0.7151</option>
+                            <option value="Linear Regression">📏 Linear Regression (Baseline) — R²: 0.6948</option>
+                            <option value="Decision Tree">🌳 Decision Tree — R²: 0.6079</option>
+                            <option value="Extra Trees">🌴 Extra Trees — R²: 0.5979</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Quick Model Pills -->
+                <div class="quick-model-pills">
+                    <span class="pills-label">Quick Switch:</span>
+                    <button type="button" class="btn-fig-model-pill active" data-model="Support Vector Regressor (SVR)">🏆 SVR</button>
+                    <button type="button" class="btn-fig-model-pill" data-model="Artificial Neural Network (MLP)">🧠 ANN (MLP)</button>
+                    <button type="button" class="btn-fig-model-pill" data-model="Gradient Boosting">⚡ Gradient Boost</button>
+                    <button type="button" class="btn-fig-model-pill" data-model="Polynomial Regression (Deg 2)">📐 Polynomial</button>
+                    <button type="button" class="btn-fig-model-pill" data-model="XGBoost">🚀 XGBoost</button>
+                    <button type="button" class="btn-fig-model-pill" data-model="Random Forest">🌲 Random Forest</button>
+                    <button type="button" class="btn-fig-model-pill" data-model="Linear Regression">📏 Linear Reg</button>
+                </div>
             </div>
 
             <div class="figures-gallery" id="figuresGalleryGrid">
